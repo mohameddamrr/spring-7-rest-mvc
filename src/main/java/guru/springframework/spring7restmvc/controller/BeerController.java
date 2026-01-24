@@ -3,6 +3,7 @@ package guru.springframework.spring7restmvc.controller;
 import guru.springframework.spring7restmvc.model.Beer;
 import guru.springframework.spring7restmvc.service.BeerService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -22,8 +23,10 @@ public class BeerController {
     public ResponseEntity handlePost(@RequestBody Beer beer){
 
         Beer savedBeer = beerService.saveNewBeer(beer);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.LOCATION, "/api/v1/beer/" + savedBeer.getId());
 
-        return new ResponseEntity(HttpStatus.CREATED);
+        return new ResponseEntity(headers,HttpStatus.CREATED);
     }
 
     @RequestMapping(method = RequestMethod.GET)
