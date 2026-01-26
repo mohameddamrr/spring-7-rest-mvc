@@ -7,6 +7,7 @@ import guru.springframework.spring7restmvc.service.BeerService;
 import guru.springframework.spring7restmvc.service.BeerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 
@@ -19,8 +20,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,10 +47,36 @@ class BeerControllerTest {
 
     BeerServiceImpl beerServiceImpl;
 
+
     @BeforeEach
     void setUp() {
         beerServiceImpl = new BeerServiceImpl();
     }
+
+    @Test
+    void testPatchBeerById() throws Exception {
+        Beer beer = beerServiceImpl.listBeers().get(0);
+
+        Map<String, Object> beerMap = new HashMap<>();
+        beerMap.put("beerName", "New Name");
+
+        mockMvc.perform(patch("/api/v1/beer/" + beer.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beerMap)))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<UUID> uuidCaptor = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<Beer> beerCaptor = ArgumentCaptor.forClass(Beer.class);
+
+        verify(beerService).updateBeerPatchById(uuidCaptor.capture(), beerCaptor.capture());
+
+        assertThat(beer.getId()).isEqualTo(uuidCaptor.getValue());
+        assertThat(beerMap.get("beerName")).isEqualTo(beerCaptor.getValue().getBeerName());
+
+
+    }
+
 
     @Test
     void DeleteBeerById() throws Exception {
