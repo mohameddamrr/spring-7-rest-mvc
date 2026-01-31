@@ -19,6 +19,7 @@ import java.util.UUID;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+
 @SpringBootTest
 @Transactional //so database state rolls back after each test
 class BeerControllerIntegration {
@@ -27,6 +28,24 @@ class BeerControllerIntegration {
     BeerController beerController;
     @Autowired
     BeerRepository beerRepository;
+
+    @Autowired
+    BeerMapper beerMapper;
+
+    @Test
+    void TestUpdateBeer(){
+        Beer beer=beerRepository.findAll().get(0);
+        BeerDTO beerDTO=beerMapper.beerToBeerDto(beer);
+        beerDTO.setId(null);
+        beerDTO.setVersion(null);
+        beerDTO.setBeerName("updated");
+        ResponseEntity responseEntity=beerController.updateById(beer.getId(), beerDTO);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo((HttpStatusCode.valueOf(204)));
+        Beer updatedBeer=beerRepository.findById(beer.getId()).get();
+        assertThat(updatedBeer.getBeerName()).isEqualTo(beerDTO.getBeerName());
+
+    }
 
     @Rollback
     @Transactional
